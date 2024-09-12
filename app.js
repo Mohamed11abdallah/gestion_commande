@@ -11,7 +11,12 @@ const {
   updateProduct,
   deleteProduct,
 } = require("./products");
-
+const {
+  addPurchaseOrder,
+  getPurchaseOrderById,
+  updatePurchaseOrder,
+  deletePurchaseOrder,
+} = require("./purchase_orders");
 const {
   addPayment,
   getPayments,
@@ -200,6 +205,93 @@ async function updateProductFromUser() {
 async function deleteProductFromUser() {
   const id = readline.questionInt("ID du produit à supprimer : ");
   await deleteProduct(id);
+}
+
+async function manageOrders() {
+  let exit = false;
+
+  while (!exit) {
+    console.log("\nMenu Principal :");
+    console.log("1. Ajouter une commande");
+    console.log("2. Lire une commande spécifique");
+    console.log("3. Mettre à jour une commande");
+    console.log("4. Supprimer une commande");
+    console.log("5. Quitter");
+
+    const choice = readline.questionInt("Choisissez une option : ");
+
+    switch (choice) {
+      case 1:
+        await addPurchaseOrder();
+        break;
+      case 2:
+        await displayPurchaseOrderById();
+        break;
+      case 3:
+        const orderIdToUpdate = readline.questionInt(
+          "Entrez l'ID de la commande à mettre à jour : "
+        );
+        const dateToUpdate = readline.question("Nouvelle date (YYYY-MM-DD) : ");
+        const customerIdToUpdate = readline.questionInt("ID du client : ");
+        const deliveryAddressToUpdate = readline.question(
+          "Nouvelle adresse de livraison : "
+        );
+        const trackNumberToUpdate = readline.question(
+          "Nouveau numéro de suivi : "
+        );
+        const statusToUpdate = readline.question("Nouveau statut : ");
+        await updatePurchaseOrder(
+          orderIdToUpdate,
+          dateToUpdate,
+          customerIdToUpdate,
+          deliveryAddressToUpdate,
+          trackNumberToUpdate,
+          statusToUpdate
+        );
+        break;
+      case 4:
+        const orderIdToDelete = readline.questionInt(
+          "Entrez l'ID de la commande à supprimer : "
+        );
+        await deletePurchaseOrder(orderIdToDelete);
+        break;
+      case 5:
+        exit = true;
+        console.log("Au revoir.");
+        break;
+      default:
+        console.log("Option invalide.");
+    }
+  }
+}
+
+async function displayPurchaseOrderById() {
+  const orderId = readline.questionInt(
+    "Entrez l'ID de la commande à afficher : "
+  );
+
+  const order = await getPurchaseOrderById(orderId);
+
+  if (order) {
+    console.log(`\nCommande ID: ${order.order_id}`);
+    console.log(`Date: ${order.date}`);
+    console.log(`Client ID: ${order.customer_id}`);
+    console.log(`Adresse de Livraison: ${order.delivery_address}`);
+    console.log(`Numéro de Suivi: ${order.track_number}`);
+    console.log(`Statut: ${order.status}`);
+
+    if (order.details.length > 0) {
+      console.log("\nDétails de la commande :");
+      order.details.forEach((detail, index) => {
+        console.log(`  Produit ${index + 1}:`);
+        console.log(`    Produit ID: ${detail.product_id}`);
+        console.log(`    Quantité: ${detail.quantity}`);
+        console.log(`    Prix: ${detail.price}`);
+      });
+    } else {
+      console.log("Aucun détail pour cette commande.");
+    }
+  }
 }
 
 async function managePayments() {
