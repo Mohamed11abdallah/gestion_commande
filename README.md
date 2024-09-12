@@ -45,7 +45,7 @@ L'application comprend les fonctionnalités suivantes :
 
 Pour démarrer le projet en local, suivez les étapes ci-dessous :
 
-### Cloner le Répôt
+### Cloner le repository 
 
 ```bash
 git clone https://github.com/Mohamed11abdallah/gestion_commande.git
@@ -58,11 +58,18 @@ Assurez-vous que vous avez Node.js installé. Ensuite, installez les dépendance
 ```bash
 npm install
 ```
+### Insertion de données :
+
+```bash
+Dans le fichier "./fichier.sql" toutes les commandes pour la création de la base de données, et la création des tables sont disponible.
+```
+
 - **Configurer la Base de Données Assurez-vous que MySQL est installé  :**
 
 ```bash
     Le fichier ./db.js contient la configuration requise pour interagir avec la base de données et ses différentes tables. Avant de démarrer l'application, assurez-vous de remplacer root par votre nom d'utilisateur, et le mot de passe par votre mot de passe de base de données dans ce fichier, afin de permettre une connexion locale à la base de données.
 ```
+
 
 ## Lancer l'Application Exécutez l'application avec Node.js :
 
