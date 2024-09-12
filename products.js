@@ -118,82 +118,23 @@ async function updateProduct(
   }
 }
 
-// async function deleteProduct(id) {
-//   try {
-//     if (!Number.isInteger(id) || id <= 0) {
-//       console.log("Erreur : ID du produit invalide.");
-//       return;
-//     }
-
-//     const result = await executeQuery("DELETE FROM products WHERE id = ?", [
-//       id,
-//     ]);
-
-//     if (result.affectedRows > 0) {
-//       console.log("Produit supprimé avec succès.");
-//     } else {
-//       console.log("Aucun produit trouvé avec cet ID.");
-//     }
-//   } catch (error) {
-//     console.error("Erreur lors de la suppression du produit :", error.message);
-//   }
-// }
-
-// async function deleteProduct(id) {
-//   let connection;
-
-//   try {
-//     connection = await pool.getConnection();
-
-//     // Vérifie si le produit avec l'ID donné existe
-//     const [idExist] = await connection.execute(
-//       "SELECT COUNT(*) AS count FROM products WHERE id = ?",
-//       [id]
-//     );
-
-//     if (idExist[0].count > 0) {
-//       // Supprime le produit
-//       await connection.execute("DELETE FROM products WHERE id = ?", [id]);
-//       console.log(`Produit avec l'ID ${id} supprimé avec succès.`);
-//     } else {
-//       console.log("Le produit avec cet ID n'existe pas.");
-//     }
-//   } catch (error) {
-//     if (error.code === "ER_ROW_IS_REFERENCED_2") {
-//       console.log(
-//         "\nImpossible de supprimer le produit : des références existent dans d'autres tables."
-//       );
-//     } else {
-//       console.error(
-//         "Erreur lors de la suppression du produit :",
-//         error.message
-//       );
-//     }
-//   } finally {
-//     if (connection) connection.release();
-//   }
-// }
-
 async function deleteProduct(id) {
   let connection;
 
   try {
     connection = await pool.getConnection();
 
-    // Vérifie si le produit avec l'ID donné existe
     const [idExist] = await connection.execute(
       "SELECT COUNT(*) AS count FROM products WHERE id = ?",
       [id]
     );
 
     if (idExist[0].count > 0) {
-      // Supprimer les détails de commande associés
       await connection.execute(
         "DELETE FROM order_details WHERE product_id = ?",
         [id]
       );
 
-      // Supprimer le produit
       await connection.execute("DELETE FROM products WHERE id = ?", [id]);
 
       console.log(`Produit avec l'ID ${id} supprimé avec succès.`);
