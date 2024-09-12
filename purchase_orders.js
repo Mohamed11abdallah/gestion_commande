@@ -166,41 +166,6 @@ async function getPurchaseOrderById(orderId) {
   }
 }
 
-// async function updatePurchaseOrder(
-//   id,
-//   date,
-//   customerId,
-//   deliveryAddress,
-//   trackNumber,
-//   status
-// ) {
-//   try {
-//     if (!validateDate(date)) {
-//       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
-//       return;
-//     }
-//     if (!validateTrackNumber(trackNumber)) {
-//       console.error("Numéro de suivi invalide.");
-//       return;
-//     }
-//     if (!validateStatus(status)) {
-//       console.error("Statut invalide.");
-//       return;
-//     }
-
-//     const result = await executeQuery(
-//       "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
-//       [date, customerId, deliveryAddress, trackNumber, status, id]
-//     );
-//     console.log("Commande mise à jour :", result.affectedRows > 0);
-//   } catch (error) {
-//     console.error(
-//       "Erreur lors de la mise à jour de la commande :",
-//       error.message
-//     );
-//   }
-// }
-
 async function updatePurchaseOrder(
   id,
   date,
@@ -210,7 +175,6 @@ async function updatePurchaseOrder(
   status
 ) {
   try {
-    // Validation des données
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
       return;
@@ -224,7 +188,6 @@ async function updatePurchaseOrder(
       return;
     }
 
-    // Mise à jour des informations principales de la commande
     const result = await executeQuery(
       "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
       [date, customerId, deliveryAddress, trackNumber, status, id]
@@ -236,13 +199,11 @@ async function updatePurchaseOrder(
       return;
     }
 
-    // Option pour modifier les détails de la commande
     const modifyDetails = readline.keyInYNStrict(
       "Voulez-vous modifier les détails de la commande ?"
     );
 
     if (modifyDetails) {
-      // Récupérer les détails actuels de la commande
       const order = await getPurchaseOrderById(id);
       if (!order) {
         console.log("Commande introuvable.");
@@ -256,10 +217,8 @@ async function updatePurchaseOrder(
         );
       });
 
-      // Demander de nouveaux détails
       const newDetails = getOrderDetailsFromUser();
 
-      // Confirmation avant d'enregistrer
       const confirm = readline.keyInYNStrict(
         "Voulez-vous enregistrer les nouveaux détails ?"
       );
@@ -268,10 +227,8 @@ async function updatePurchaseOrder(
         return;
       }
 
-      // Supprimer les anciens détails
       await executeQuery("DELETE FROM order_details WHERE order_id = ?", [id]);
 
-      // Ajouter les nouveaux détails
       for (const detail of newDetails) {
         if (detail.quantity <= 0 || detail.price <= 0) {
           console.error(
