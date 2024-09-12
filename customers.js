@@ -1,5 +1,61 @@
 const { pool } = require("./db");
 
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePhone(phone) {
+  const phoneRegex = /^\d+$/;
+  return phoneRegex.test(phone);
+}
+
+async function updateCustomer(id, name, address, email, phone) {
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+
+    const [rows] = await connection.execute(
+      "SELECT * FROM customers WHERE id = ?",
+      [id]
+    );
+
+    if (rows.length === 0) {
+      console.error(`Le client avec l'ID ${id} n'existe pas.`);
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      console.error("Email invalide.");
+      return;
+    }
+    if (!validatePhone(phone)) {
+      console.error(
+        "Téléphone invalide. Il doit contenir uniquement des chiffres."
+      );
+      return;
+    }
+
+    const [result] = await connection.execute(
+      "UPDATE customers SET name = ?, address = ?, email = ?, phone = ? WHERE id = ?",
+      [name, address, email, phone, id]
+    );
+
+    if (result.affectedRows > 0) {
+      console.log("Client mis à jour avec succès.");
+    } else {
+      console.log(
+        "Aucun changement apporté. Le client existe peut-être mais aucun champ n'a été modifié."
+      );
+    }
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du client :", error.message);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
 async function updateCustomer(id, name, address, email, phone) {
   let connection;
 
