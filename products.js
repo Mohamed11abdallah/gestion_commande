@@ -1,5 +1,33 @@
 const { executeQuery } = require("./db");
 
+function validateProduct(
+  name,
+  description,
+  price,
+  stock,
+  category,
+  barcode,
+  status
+) {
+  const validStatuses = ["available", "unavailable", "discontinued"];
+
+  return (
+    typeof name === "string" &&
+    name.trim().length > 0 &&
+    typeof description === "string" &&
+    description.trim().length > 0 &&
+    typeof price === "number" &&
+    price > 0 &&
+    Number.isInteger(stock) &&
+    stock >= 0 &&
+    typeof category === "string" &&
+    category.trim().length > 0 &&
+    typeof barcode === "string" &&
+    barcode.trim().length > 0 &&
+    validStatuses.includes(status)
+  );
+}
+
 async function addProduct(
   name,
   description,
