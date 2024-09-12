@@ -59,6 +59,7 @@ Assurez-vous que vous avez Node.js installé. Ensuite, installez les dépendance
 npm install
 npm install mysql2 readline-sync
 ```
+- **Configurer la Base de Données Assurez-vous que MySQL est installé, puis utiliser le fichier sql pour la base de données**
 
 ## Lancer l'Application Exécutez l'application avec Node.js :
 
