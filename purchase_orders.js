@@ -13,7 +13,7 @@ function validateTrackNumber(trackNumber) {
 }
 
 function validateStatus(status) {
-  const validStatuses = ["En attente", "En cours", "Livrée", "Annulée"];
+  const validStatuses = ["En attente", "En cours", "Livrer", "Annuler"];
   return validStatuses.includes(status);
 }
 
@@ -47,7 +47,7 @@ async function addPurchaseOrder() {
     const deliveryAddress = readline.question("Adresse de livraison : ");
     const trackNumber = readline.question("Numéro de suivi : ");
     const status = readline.question(
-      "Statut (En attente, En cours, Livrée, Annulée) : "
+      "Statut (En attente, En cours, Livrer, Annuler) : "
     );
 
     if (!validateDate(date)) {
