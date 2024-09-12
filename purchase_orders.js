@@ -47,7 +47,7 @@ async function addPurchaseOrder() {
     const deliveryAddress = readline.question("Adresse de livraison : ");
     const trackNumber = readline.question("Numéro de suivi : ");
     const status = readline.question(
-      "Statut (En attente, En cours, Livrée, Annulée) : "
+      "Statut (En attente, En cours, Livrer, Annuler) : "
     );
 
     if (!validateDate(date)) {
