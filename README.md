@@ -58,7 +58,11 @@ Assurez-vous que vous avez Node.js installé. Ensuite, installez les dépendance
 ```bash
 npm install
 ```
-- **Configurer la Base de Données Assurez-vous que MySQL est installé, puis utiliser le fichier sql pour la base de données**
+- **Configurer la Base de Données Assurez-vous que MySQL est installé  :**
+
+```bash
+    Le fichier ./db.js contient la configuration requise pour interagir avec la base de données et ses différentes tables. Avant de démarrer l'application, assurez-vous de remplacer root par votre nom d'utilisateur, et le mot de passe par votre mot de passe de base de données dans ce fichier, afin de permettre une connexion locale à la base de données.
+```
 
 ## Lancer l'Application Exécutez l'application avec Node.js :
 

@@ -1,6 +1,6 @@
 const readline = require("readline-sync");
 const { executeQuery } = require("./db");
-const { addOrderDetail } = require("./order_details");
+const { addOrderDetail } = require("./orderDetails");
 
 function validateDate(date) {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -166,6 +166,41 @@ async function getPurchaseOrderById(orderId) {
   }
 }
 
+// async function updatePurchaseOrder(
+//   id,
+//   date,
+//   customerId,
+//   deliveryAddress,
+//   trackNumber,
+//   status
+// ) {
+//   try {
+//     if (!validateDate(date)) {
+//       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
+//       return;
+//     }
+//     if (!validateTrackNumber(trackNumber)) {
+//       console.error("Numéro de suivi invalide.");
+//       return;
+//     }
+//     if (!validateStatus(status)) {
+//       console.error("Statut invalide.");
+//       return;
+//     }
+
+//     const result = await executeQuery(
+//       "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
+//       [date, customerId, deliveryAddress, trackNumber, status, id]
+//     );
+//     console.log("Commande mise à jour :", result.affectedRows > 0);
+//   } catch (error) {
+//     console.error(
+//       "Erreur lors de la mise à jour de la commande :",
+//       error.message
+//     );
+//   }
+// }
+
 async function updatePurchaseOrder(
   id,
   date,
@@ -175,6 +210,7 @@ async function updatePurchaseOrder(
   status
 ) {
   try {
+    // Validation des données
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
       return;
@@ -188,11 +224,73 @@ async function updatePurchaseOrder(
       return;
     }
 
+    // Mise à jour des informations principales de la commande
     const result = await executeQuery(
       "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
       [date, customerId, deliveryAddress, trackNumber, status, id]
     );
-    console.log("Commande mise à jour :", result.affectedRows > 0);
+    if (result.affectedRows > 0) {
+      console.log("Informations de la commande mises à jour.");
+    } else {
+      console.log("Aucune modification détectée.");
+      return;
+    }
+
+    // Option pour modifier les détails de la commande
+    const modifyDetails = readline.keyInYNStrict(
+      "Voulez-vous modifier les détails de la commande ?"
+    );
+
+    if (modifyDetails) {
+      // Récupérer les détails actuels de la commande
+      const order = await getPurchaseOrderById(id);
+      if (!order) {
+        console.log("Commande introuvable.");
+        return;
+      }
+
+      console.log("Détails actuels de la commande :");
+      order.details.forEach((detail, index) => {
+        console.log(
+          `Produit ID : ${detail.product_id}, Quantité : ${detail.quantity}, Prix : ${detail.price}`
+        );
+      });
+
+      // Demander de nouveaux détails
+      const newDetails = getOrderDetailsFromUser();
+
+      // Confirmation avant d'enregistrer
+      const confirm = readline.keyInYNStrict(
+        "Voulez-vous enregistrer les nouveaux détails ?"
+      );
+      if (!confirm) {
+        console.log("Modification des détails annulée.");
+        return;
+      }
+
+      // Supprimer les anciens détails
+      await executeQuery("DELETE FROM order_details WHERE order_id = ?", [id]);
+
+      // Ajouter les nouveaux détails
+      for (const detail of newDetails) {
+        if (detail.quantity <= 0 || detail.price <= 0) {
+          console.error(
+            "Erreur : La quantité et le prix doivent être positifs."
+          );
+          return;
+        }
+        await addOrderDetail(
+          id,
+          detail.productId,
+          detail.quantity,
+          detail.price
+        );
+      }
+
+      console.log("Détails de commande mis à jour.");
+    } else {
+      console.log("Aucune modification des détails de la commande.");
+    }
   } catch (error) {
     console.error(
       "Erreur lors de la mise à jour de la commande :",
