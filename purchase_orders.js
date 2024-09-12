@@ -210,8 +210,8 @@ async function deletePurchaseOrder(orderId) {
 
     if (deleteOrderDetails.affectedRows > 0) {
       console.log("Détails de la commande supprimés avec succès.");
-    } else {
-      console.log("Aucun détail trouvé pour cette commande.");
+      // } else {
+      //   console.log("Aucun détail trouvé pour cette commande.");
     }
 
     const deletePurchaseOrder = await executeQuery(
