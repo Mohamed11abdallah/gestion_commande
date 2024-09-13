@@ -189,7 +189,9 @@ async function updatePurchaseOrder(
       return;
     }
     if (!validateStatus(status)) {
-      console.error("Statut invalide.");
+      console.error(
+        "Statut invalide. Les statuts acceptés sont : En attente, En cours, Livrer, Annuler."
+      );
       return;
     }
 

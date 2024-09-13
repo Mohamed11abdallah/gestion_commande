@@ -24,6 +24,11 @@ async function updateCustomer(id, name, address, email, phone) {
       console.error(`Le client avec l'ID ${id} n'existe pas.`);
       return;
     }
+    // Vérification que le nom est obligatoire
+    if (!name) {
+      console.error("Le nom est obligatoire.");
+      return;
+    }
 
     if (!validateEmail(email)) {
       console.error("Email invalide.");
@@ -56,20 +61,32 @@ async function updateCustomer(id, name, address, email, phone) {
 
 async function addCustomer(name, address, email, phone) {
   try {
-    if (!validateEmail(email)) {
-      console.error("Email invalide.");
+    // Vérification que le nom est obligatoire
+    if (!name) {
+      console.error("Le nom est obligatoire.");
       return;
     }
-    if (!validatePhone(phone)) {
+    if (!address) {
+      console.error("L'adresse est obligatoire.");
+      return;
+    }
+
+    // Validation des champs obligatoires (email et téléphone)
+    if (!email || !validateEmail(email)) {
+      console.error("L'email est obligatoire et doit être valide.");
+      return;
+    }
+    if (!phone || !validatePhone(phone)) {
       console.error(
-        "Téléphone invalide. Il doit contenir uniquement des chiffres."
+        "Le téléphone est obligatoire et doit contenir uniquement des chiffres."
       );
       return;
     }
 
+    // Insertion du client dans la base de données
     const [result] = await pool.execute(
       "INSERT INTO customers (name, address, email, phone) VALUES (?, ?, ?, ?)",
-      [name, address, email, phone]
+      [name, address || null, email, phone]
     );
     console.log("Client ajouté avec l'ID :", result.insertId);
     return result.insertId;

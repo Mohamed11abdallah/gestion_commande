@@ -16,7 +16,7 @@ const {
   getPurchaseOrderById,
   updatePurchaseOrder,
   deletePurchaseOrder,
-} = require("./purchase_orders");
+} = require("./purchaseOrders");
 const {
   addPayment,
   getPayments,
