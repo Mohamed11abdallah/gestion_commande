@@ -38,6 +38,116 @@ function getOrderDetailsFromUser() {
   return details;
 }
 
+// async function addPurchaseOrder() {
+//   try {
+//     console.log("Début de la saisie de la commande.");
+
+//     const date = readline.question("Date (YYYY-MM-DD) : ");
+//     const customerId = readline.questionInt("ID du client : ");
+//     const deliveryAddress = readline.question("Adresse de livraison : ");
+//     const trackNumber = readline.question("Numéro de suivi : ");
+//     const status = readline.question(
+//       "Statut (En attente, En cours, Livrer, Annuler) : "
+//     );
+//     // Vérification de l'existence du client
+//     const clientExists = await executeQuery(
+//       "SELECT COUNT(*) AS count FROM customers WHERE id = ?",
+//       [customerId]
+//     );
+//     if (clientExists[0].count === 0) {
+//       console.error("Erreur : Le client n'existe pas.");
+//       return;
+//     }
+//     // Vérification de l'existence des produits
+//     for (const detail of orderDetails) {
+//       const productExists = await executeQuery(
+//         "SELECT COUNT(*) AS count FROM products WHERE id = ?",
+//         [detail.productId]
+//       );
+//       if (productExists[0].count === 0) {
+//         console.error(
+//           `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas.`
+//         );
+//         return;
+//       }
+//     }
+
+//     if (!validateDate(date)) {
+//       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
+//       return;
+//     }
+//     if (!validateTrackNumber(trackNumber)) {
+//       console.error("Numéro de suivi invalide.");
+//       return;
+//     }
+//     // if (!validateStatus(status)) {
+//     //   console.error("Statut invalide.");
+//     //   return;
+//     // }
+//     if (!validateStatus(status)) {
+//       console.error(
+//         "Statut invalide. Les statuts acceptés sont : En attente, En cours, Livrer, Annuler."
+//       );
+//       return;
+//     }
+
+//     const orderDetails = getOrderDetailsFromUser();
+
+//     console.log("\nRésumé de la commande :");
+//     console.log(`Date : ${date}`);
+//     console.log(`ID du client : ${customerId}`);
+//     console.log(`Adresse de livraison : ${deliveryAddress}`);
+//     console.log(`Numéro de suivi : ${trackNumber}`);
+//     console.log(`Statut : ${status}`);
+//     console.log("Détails de la commande :");
+//     orderDetails.forEach((detail, index) => {
+//       console.log(
+//         `Détail ${index + 1} - Produit ID : ${detail.productId}, Quantité : ${
+//           detail.quantity
+//         }, Prix : ${detail.price}`
+//       );
+//     });
+
+//     const confirm = readline.keyInYNStrict(
+//       "Voulez-vous enregistrer cette commande ?"
+//     );
+
+//     if (!confirm) {
+//       console.log("Commande annulée.");
+//       return;
+//     }
+
+//     const result = await executeQuery(
+//       "INSERT INTO purchase_orders (date, customer_id, delivery_address, track_number, status) VALUES (?, ?, ?, ?, ?)",
+//       [date, customerId, deliveryAddress, trackNumber, status]
+//     );
+//     const orderId = result.insertId;
+
+//     console.log("Commande ajoutée avec l'ID :", orderId);
+
+//     let totalAmount = 0;
+//     for (const detail of orderDetails) {
+//       if (detail.quantity <= 0 || detail.price <= 0) {
+//         console.error("Erreur : La quantité et le prix doivent être positifs.");
+//         return;
+//       }
+
+//       totalAmount += detail.quantity * detail.price;
+
+//       await addOrderDetail(
+//         orderId,
+//         detail.productId,
+//         detail.quantity,
+//         detail.price
+//       );
+//     }
+
+//     console.log("Tous les détails de commande ont été ajoutés.");
+//   } catch (error) {
+//     console.error("Erreur lors de l'ajout de la commande :", error.message);
+//   }
+// }
+
 async function addPurchaseOrder() {
   try {
     console.log("Début de la saisie de la commande.");
@@ -50,6 +160,7 @@ async function addPurchaseOrder() {
       "Statut (En attente, En cours, Livrer, Annuler) : "
     );
 
+    // Valider les données avant de continuer
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
       return;
@@ -59,36 +170,26 @@ async function addPurchaseOrder() {
       return;
     }
     if (!validateStatus(status)) {
-      console.error("Statut invalide.");
+      console.error(
+        "Statut invalide. Les statuts acceptés sont : En attente, En cours, Livrer, Annuler."
+      );
       return;
     }
 
+    // Saisir les détails de la commande avant d'insérer la commande
     const orderDetails = getOrderDetailsFromUser();
 
-    console.log("\nRésumé de la commande :");
-    console.log(`Date : ${date}`);
-    console.log(`ID du client : ${customerId}`);
-    console.log(`Adresse de livraison : ${deliveryAddress}`);
-    console.log(`Numéro de suivi : ${trackNumber}`);
-    console.log(`Statut : ${status}`);
-    console.log("Détails de la commande :");
-    orderDetails.forEach((detail, index) => {
-      console.log(
-        `Détail ${index + 1} - Produit ID : ${detail.productId}, Quantité : ${
-          detail.quantity
-        }, Prix : ${detail.price}`
-      );
-    });
-
-    const confirm = readline.keyInYNStrict(
-      "Voulez-vous enregistrer cette commande ?"
+    // Vérification de l'existence du client
+    const clientExists = await executeQuery(
+      "SELECT COUNT(*) AS count FROM customers WHERE id = ?",
+      [customerId]
     );
-
-    if (!confirm) {
-      console.log("Commande annulée.");
+    if (clientExists[0].count === 0) {
+      console.error("Erreur : Le client n'existe pas.");
       return;
     }
 
+    // Insertion de la commande dans la base de données
     const result = await executeQuery(
       "INSERT INTO purchase_orders (date, customer_id, delivery_address, track_number, status) VALUES (?, ?, ?, ?, ?)",
       [date, customerId, deliveryAddress, trackNumber, status]
@@ -97,6 +198,7 @@ async function addPurchaseOrder() {
 
     console.log("Commande ajoutée avec l'ID :", orderId);
 
+    // Maintenant, traiter les détails de commande
     let totalAmount = 0;
     for (const detail of orderDetails) {
       if (detail.quantity <= 0 || detail.price <= 0) {
@@ -106,6 +208,19 @@ async function addPurchaseOrder() {
 
       totalAmount += detail.quantity * detail.price;
 
+      // Vérification de l'existence du produit
+      const productExists = await executeQuery(
+        "SELECT COUNT(*) AS count FROM products WHERE id = ?",
+        [detail.productId]
+      );
+      if (productExists[0].count === 0) {
+        console.error(
+          `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas.`
+        );
+        return;
+      }
+
+      // Ajouter les détails de la commande
       await addOrderDetail(
         orderId,
         detail.productId,
