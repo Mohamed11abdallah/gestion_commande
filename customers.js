@@ -36,6 +36,7 @@ async function updateCustomer(id, name, address, email, phone) {
       return;
     }
 
+    // Mise à jour des informations du client
     const [result] = await connection.execute(
       "UPDATE customers SET name = ?, address = ?, email = ?, phone = ? WHERE id = ?",
       [name, address, email, phone, id]
