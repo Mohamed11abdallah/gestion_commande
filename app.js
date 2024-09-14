@@ -239,7 +239,9 @@ async function manageOrders() {
         const trackNumberToUpdate = readline.question(
           "Nouveau numéro de suivi : "
         );
-        const statusToUpdate = readline.question("Nouveau statut : ");
+        const statusToUpdate = readline.question(
+          "Nouveau statut (En attente, En cours, Livrer, Annuler) : "
+        );
         await updatePurchaseOrder(
           orderIdToUpdate,
           dateToUpdate,
