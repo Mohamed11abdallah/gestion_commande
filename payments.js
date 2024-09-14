@@ -2,6 +2,21 @@ const { executeQuery } = require("./db");
 
 async function addPayment(orderId, amount, paymentMethod) {
   try {
+    const orderExists = await executeQuery(
+      "SELECT COUNT(*) AS count FROM purchase_orders WHERE id = ?",
+      [orderId]
+    );
+
+    if (orderExists[0].count === 0) {
+      console.error(`Erreur : La commande avec l'ID ${orderId} n'existe pas.`);
+      return;
+    }
+
+    if (amount <= 0) {
+      console.error("Erreur : Le montant doit être positif.");
+      return;
+    }
+
     const result = await executeQuery(
       "INSERT INTO payments (order_id, amount, payment_method) VALUES (?, ?, ?)",
       [orderId, amount, paymentMethod]
@@ -27,6 +42,23 @@ async function getPayments() {
 
 async function updatePayment(id, newOrderId, newAmount, newPaymentMethod) {
   try {
+    const orderExists = await executeQuery(
+      "SELECT COUNT(*) AS count FROM purchase_orders WHERE id = ?",
+      [newOrderId]
+    );
+
+    if (orderExists[0].count === 0) {
+      console.error(
+        `Erreur : La commande avec l'ID ${newOrderId} n'existe pas.`
+      );
+      return;
+    }
+
+    if (newAmount <= 0) {
+      console.error("Erreur : Le montant doit être positif.");
+      return;
+    }
+
     const result = await executeQuery(
       "UPDATE payments SET order_id = ?, amount = ?, payment_method = ? WHERE id = ?",
       [newOrderId, newAmount, newPaymentMethod, id]

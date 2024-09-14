@@ -28,6 +28,15 @@ function getOrderDetailsFromUser() {
     const quantity = readline.questionInt("Quantité : ");
     const price = readline.questionFloat("Prix : ");
 
+    if (quantity <= 0) {
+      console.error("Erreur : La quantité doit être supérieure à 0.");
+      return null;
+    }
+    if (price <= 0) {
+      console.error("Erreur : Le prix doit être supérieur à 0.");
+      return null;
+    }
+
     details.push({ productId, quantity, price });
 
     addMore = readline.keyInYNStrict(
@@ -50,7 +59,6 @@ async function addPurchaseOrder() {
       "Statut (En attente, En cours, Livrer, Annuler) : "
     );
 
-    // Valider les données avant de continuer
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
       return;
@@ -66,20 +74,21 @@ async function addPurchaseOrder() {
       return;
     }
 
-    // Saisir les détails de la commande avant d'insérer la commande
-    const orderDetails = getOrderDetailsFromUser();
-
-    // Vérification de l'existence du client
     const clientExists = await executeQuery(
       "SELECT COUNT(*) AS count FROM customers WHERE id = ?",
       [customerId]
     );
     if (clientExists[0].count === 0) {
-      console.error("Erreur : Le client n'existe pas.");
+      console.error("Erreur : Le client avec l'ID spécifié n'existe pas.");
       return;
     }
 
-    // Insertion de la commande dans la base de données
+    const orderDetails = getOrderDetailsFromUser();
+
+    if (!orderDetails) {
+      return;
+    }
+
     const result = await executeQuery(
       "INSERT INTO purchase_orders (date, customer_id, delivery_address, track_number, status) VALUES (?, ?, ?, ?, ?)",
       [date, customerId, deliveryAddress, trackNumber, status]
@@ -88,17 +97,10 @@ async function addPurchaseOrder() {
 
     console.log("Commande ajoutée avec l'ID :", orderId);
 
-    // Maintenant, traiter les détails de commande
     let totalAmount = 0;
     for (const detail of orderDetails) {
-      if (detail.quantity <= 0 || detail.price <= 0) {
-        console.error("Erreur : La quantité et le prix doivent être positifs.");
-        return;
-      }
-
       totalAmount += detail.quantity * detail.price;
 
-      // Vérification de l'existence du produit
       const productExists = await executeQuery(
         "SELECT COUNT(*) AS count FROM products WHERE id = ?",
         [detail.productId]
@@ -110,7 +112,6 @@ async function addPurchaseOrder() {
         return;
       }
 
-      // Ajouter les détails de la commande
       await addOrderDetail(
         orderId,
         detail.productId,
