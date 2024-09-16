@@ -1,7 +1,6 @@
 const readline = require("readline-sync");
 const { executeQuery } = require("./db");
 
-// Fonction de validation des détails de commande
 function validateOrderDetails(order_id, product_id, quantity, price) {
   return (
     Number.isInteger(order_id) &&
@@ -11,22 +10,10 @@ function validateOrderDetails(order_id, product_id, quantity, price) {
   );
 }
 
-// Fonction de validation de l'ID
 function validateId(id) {
   return Number.isInteger(id) && id > 0;
 }
 
-// Fonction de validation de la quantité
-function validateQuantity(quantity) {
-  return Number.isInteger(quantity) && quantity > 0;
-}
-
-// Fonction de validation du prix
-function validatePrice(price) {
-  return typeof price === "number" && price > 0;
-}
-
-// Vérifie l'existence d'un produit
 async function productExists(product_id) {
   const result = await executeQuery(
     "SELECT COUNT(*) AS count FROM products WHERE id = ?",
@@ -35,16 +22,13 @@ async function productExists(product_id) {
   return result[0].count > 0;
 }
 
-// Fonction pour ajouter un détail de commande
 async function addOrderDetail(order_id, product_id, quantity, price) {
   try {
-    // Validation des données de détail de commande
     if (!validateOrderDetails(order_id, product_id, quantity, price)) {
       console.log("Erreur : Les données du détail de commande sont invalides.");
       return;
     }
 
-    // Vérification de l'existence du produit
     const productExist = await productExists(product_id);
 
     if (!productExist) {
@@ -52,7 +36,6 @@ async function addOrderDetail(order_id, product_id, quantity, price) {
       return;
     }
 
-    // Insertion du détail de commande si le produit existe
     const result = await executeQuery(
       "INSERT INTO order_details (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)",
       [order_id, product_id, quantity, price]
@@ -67,7 +50,6 @@ async function addOrderDetail(order_id, product_id, quantity, price) {
   }
 }
 
-// Fonction pour récupérer les détails de commandes
 async function getOrderDetail() {
   try {
     const rows = await executeQuery("SELECT * FROM order_details");
@@ -80,16 +62,13 @@ async function getOrderDetail() {
   }
 }
 
-// Fonction pour mettre à jour un détail de commande
 async function updateOrderDetail(id, order_id, product_id, quantity, price) {
   try {
-    // Validation des données de détail de commande
     if (!validateOrderDetails(order_id, product_id, quantity, price)) {
       console.log("Erreur : Les données du détail de commande sont invalides.");
       return;
     }
 
-    // Vérification de l'existence du produit
     const productExist = await productExists(product_id);
 
     if (!productExist) {
@@ -97,7 +76,6 @@ async function updateOrderDetail(id, order_id, product_id, quantity, price) {
       return;
     }
 
-    // Mise à jour du détail de commande si le produit existe
     const result = await executeQuery(
       "UPDATE order_details SET order_id = ?, product_id = ?, quantity = ?, price = ? WHERE id = ?",
       [order_id, product_id, quantity, price, id]
@@ -116,7 +94,6 @@ async function updateOrderDetail(id, order_id, product_id, quantity, price) {
   }
 }
 
-// Fonction pour supprimer un détail de commande
 async function deleteOrderDetail(id) {
   try {
     if (!validateId(id)) {

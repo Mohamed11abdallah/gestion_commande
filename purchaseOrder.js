@@ -172,135 +172,6 @@ async function getPurchaseOrderById(orderId) {
   }
 }
 
-// async function updatePurchaseOrder(
-//   id,
-//   date,
-//   customerId,
-//   deliveryAddress,
-//   trackNumber,
-//   status
-// ) {
-//   try {
-//     // Validation des données
-//     if (!validateDate(date)) {
-//       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
-//       return;
-//     }
-//     if (!validateTrackNumber(trackNumber)) {
-//       console.error("Numéro de suivi invalide.");
-//       return;
-//     }
-//     if (!validateStatus(status)) {
-//       console.error(
-//         "Statut invalide. Les statuts acceptés sont : En attente, En cours, Livrer, Annuler."
-//       );
-//       return;
-//     }
-
-//     // Vérifier si la commande existe
-//     const orderExists = await executeQuery(
-//       "SELECT COUNT(*) AS count FROM purchase_orders WHERE id = ?",
-//       [id]
-//     );
-//     if (orderExists[0].count === 0) {
-//       console.log("Commande introuvable.");
-//       return;
-//     }
-
-//     // Vérifier si le client existe
-//     const clientExists = await executeQuery(
-//       "SELECT COUNT(*) AS count FROM customers WHERE id = ?",
-//       [customerId]
-//     );
-//     if (clientExists[0].count === 0) {
-//       console.error("Erreur : Le client avec l'ID spécifié n'existe pas.");
-//       return;
-//     }
-
-//     // Option de modification des détails de la commande
-//     const modifyDetails = readline.keyInYNStrict(
-//       "Voulez-vous modifier les détails de la commande ?"
-//     );
-
-//     if (modifyDetails) {
-//       const orderDetails = await executeQuery(
-//         "SELECT * FROM order_details WHERE order_id = ?",
-//         [id]
-//       );
-
-//       if (orderDetails.length === 0) {
-//         console.log("Détails de la commande introuvables.");
-//         return;
-//       }
-
-//       console.log("Détails actuels de la commande :");
-//       orderDetails.forEach((detail) => {
-//         console.log(
-//           `Produit ID : ${detail.product_id}, Quantité : ${detail.quantity}, Prix : ${detail.price}`
-//         );
-//       });
-
-//       const newDetails = getOrderDetailsFromUser();
-
-//       if (!newDetails) {
-//         return;
-//       }
-
-//       // Vérifier l'existence des produits avant de supprimer et de réinsérer les détails
-//       for (const detail of newDetails) {
-//         const productExists = await executeQuery(
-//           "SELECT COUNT(*) AS count FROM products WHERE id = ?",
-//           [detail.productId]
-//         );
-//         if (productExists[0].count === 0) {
-//           console.error(
-//             `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas.`
-//           );
-//           return;
-//         }
-//       }
-
-//       // Si tous les produits existent, procéder à la mise à jour des détails de commande
-//       await executeQuery("DELETE FROM order_details WHERE order_id = ?", [id]);
-
-//       for (const detail of newDetails) {
-//         if (detail.quantity <= 0 || detail.price <= 0) {
-//           console.error(
-//             "Erreur : La quantité et le prix doivent être positifs."
-//           );
-//           return;
-//         }
-//         await addOrderDetail(
-//           id,
-//           detail.productId,
-//           detail.quantity,
-//           detail.price
-//         );
-//       }
-
-//       console.log("Détails de commande mis à jour.");
-//     } else {
-//       console.log("Aucune modification des détails de la commande.");
-//     }
-
-//     // Mise à jour de la commande
-//     const result = await executeQuery(
-//       "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
-//       [date, customerId, deliveryAddress, trackNumber, status, id]
-//     );
-//     if (result.affectedRows > 0) {
-//       console.log("Informations de la commande mises à jour.");
-//     } else {
-//       console.log("Aucune modification détectée.");
-//     }
-//   } catch (error) {
-//     console.error(
-//       "Erreur lors de la mise à jour de la commande :",
-//       error.message
-//     );
-//   }
-// }
-
 async function updatePurchaseOrder(
   id,
   date,
@@ -310,7 +181,6 @@ async function updatePurchaseOrder(
   status
 ) {
   try {
-    // Validation des données
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
       return;
@@ -326,7 +196,6 @@ async function updatePurchaseOrder(
       return;
     }
 
-    // Vérifier si la commande existe
     const orderExists = await executeQuery(
       "SELECT COUNT(*) AS count FROM purchase_orders WHERE id = ?",
       [id]
@@ -336,7 +205,6 @@ async function updatePurchaseOrder(
       return;
     }
 
-    // Vérifier si le client existe
     const clientExists = await executeQuery(
       "SELECT COUNT(*) AS count FROM customers WHERE id = ?",
       [customerId]
@@ -346,7 +214,6 @@ async function updatePurchaseOrder(
       return;
     }
 
-    // Mise à jour des informations de la commande
     const updateResult = await executeQuery(
       "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
       [date, customerId, deliveryAddress, trackNumber, status, id]
@@ -357,7 +224,6 @@ async function updatePurchaseOrder(
       console.log("Aucune modification détectée.");
     }
 
-    // Option de modification des détails de la commande
     const modifyDetails = readline.keyInYNStrict(
       "Voulez-vous modifier les détails de la commande ?"
     );
@@ -385,7 +251,6 @@ async function updatePurchaseOrder(
         return;
       }
 
-      // Vérifier l'existence des produits avant de supprimer et de réinsérer les détails
       for (const detail of newDetails) {
         const productExists = await executeQuery(
           "SELECT COUNT(*) AS count FROM products WHERE id = ?",
@@ -399,7 +264,6 @@ async function updatePurchaseOrder(
         }
       }
 
-      // Si tous les produits existent, procéder à la mise à jour des détails de commande
       await executeQuery("DELETE FROM order_details WHERE order_id = ?", [id]);
 
       for (const detail of newDetails) {
@@ -431,7 +295,6 @@ async function updatePurchaseOrder(
 
 async function deletePurchaseOrder(orderId) {
   try {
-    // Vérifier si la commande existe
     const orderExists = await executeQuery(
       "SELECT COUNT(*) AS count FROM purchase_orders WHERE id = ?",
       [orderId]
@@ -441,10 +304,8 @@ async function deletePurchaseOrder(orderId) {
       return;
     }
 
-    // Supprimer les paiements associés à la commande
     await executeQuery("DELETE FROM payments WHERE order_id = ?", [orderId]);
 
-    // Supprimer les détails de la commande
     const deleteOrderDetails = await executeQuery(
       "DELETE FROM order_details WHERE order_id = ?",
       [orderId]
@@ -454,7 +315,6 @@ async function deletePurchaseOrder(orderId) {
       console.log("Détails de la commande supprimés avec succès.");
     }
 
-    // Supprimer la commande
     const deletePurchaseOrder = await executeQuery(
       "DELETE FROM purchase_orders WHERE id = ?",
       [orderId]

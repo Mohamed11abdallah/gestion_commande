@@ -24,7 +24,7 @@ async function updateCustomer(id, name, address, email, phone) {
       console.error(`Le client avec l'ID ${id} n'existe pas.`);
       return;
     }
-    // Vérification que le nom est obligatoire
+
     if (!name) {
       console.error("Le nom est obligatoire.");
       return;
@@ -41,7 +41,6 @@ async function updateCustomer(id, name, address, email, phone) {
       return;
     }
 
-    // Mise à jour des informations du client
     const [result] = await connection.execute(
       "UPDATE customers SET name = ?, address = ?, email = ?, phone = ? WHERE id = ?",
       [name, address, email, phone, id]
@@ -61,7 +60,6 @@ async function updateCustomer(id, name, address, email, phone) {
 
 async function addCustomer(name, address, email, phone) {
   try {
-    // Vérification que le nom est obligatoire
     if (!name) {
       console.error("Le nom est obligatoire.");
       return;
@@ -71,7 +69,6 @@ async function addCustomer(name, address, email, phone) {
       return;
     }
 
-    // Validation des champs obligatoires (email et téléphone)
     if (!email || !validateEmail(email)) {
       console.error("L'email est obligatoire et doit être valide.");
       return;
@@ -83,7 +80,6 @@ async function addCustomer(name, address, email, phone) {
       return;
     }
 
-    // Insertion du client dans la base de données
     const [result] = await pool.execute(
       "INSERT INTO customers (name, address, email, phone) VALUES (?, ?, ?, ?)",
       [name, address || null, email, phone]
