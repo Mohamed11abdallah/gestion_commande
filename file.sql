@@ -22,41 +22,6 @@ CREATE TABLE customers (
   phone VARCHAR(20) UNIQUE NOT NULL
 );
 
-CREATE TABLE products (
-  id INTEGER PRIMARY KEY,
-  name VARCHAR(50) NOT NULL,
-  description VARCHAR(300),
-  price DECIMAL(10, 2) NOT NULL,
-  stock INTEGER NOT NULL
-);
-
-CREATE TABLE purchase_orders (
-  id INTEGER PRIMARY KEY,
-  date DATE NOT NULL,
-  customer_id INTEGER NOT NULL,
-  delivery_address VARCHAR(100),
-  FOREIGN KEY (customer_id) REFERENCES customers(id)
-);
-
-CREATE TABLE order_details (
-  id INTEGER PRIMARY KEY,
-  order_id INTEGER NOT NULL,
-  product_id INTEGER NOT NULL,
-  quantity INTEGER,
-  price DECIMAL(10, 2),
-  FOREIGN KEY (order_id) REFERENCES purchase_orders(id),
-  FOREIGN KEY (product_id) REFERENCES products(id)
-);
-
-CREATE TABLE payments (
-  id INTEGER AUTO_INCREMENT PRIMARY KEY,
-  order_id INTEGER NOT NULL,
-  date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  amount DECIMAL(10, 2) NOT NULL,
-  payment_method VARCHAR(50) NOT NULL,
-  FOREIGN KEY (order_id) REFERENCES purchase_orders(id)
-);
-
 ALTER TABLE
   customers
 MODIFY
@@ -69,6 +34,14 @@ MODIFY
   COLUMN email VARCHAR(255) UNIQUE NOT NULL,
 MODIFY
   COLUMN phone VARCHAR(20) UNIQUE NOT NULL;
+
+CREATE TABLE products (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  description VARCHAR(300),
+  price DECIMAL(10, 2) NOT NULL,
+  stock INTEGER NOT NULL
+);
 
 ALTER TABLE
   products
@@ -85,6 +58,14 @@ ADD
 ADD
   COLUMN status VARCHAR(50);
 
+CREATE TABLE purchase_orders (
+  id INTEGER PRIMARY KEY,
+  date DATE NOT NULL,
+  customer_id INTEGER NOT NULL,
+  delivery_address VARCHAR(100),
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
 ALTER TABLE
   purchase_orders
 MODIFY
@@ -96,6 +77,16 @@ ADD
 ADD
   COLUMN status VARCHAR(50) DEFAULT 'pending';
 
+CREATE TABLE order_details (
+  id INTEGER PRIMARY KEY,
+  order_id INTEGER NOT NULL,
+  product_id INTEGER NOT NULL,
+  quantity INTEGER,
+  price DECIMAL(10, 2),
+  FOREIGN KEY (order_id) REFERENCES purchase_orders(id),
+  FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
 ALTER TABLE
   order_details
 MODIFY
@@ -104,6 +95,15 @@ MODIFY
   COLUMN quantity INTEGER NOT NULL,
 MODIFY
   COLUMN price DECIMAL(10, 2) NOT NULL;
+
+CREATE TABLE payments (
+  id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  order_id INTEGER NOT NULL,
+  date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  amount DECIMAL(10, 2) NOT NULL,
+  payment_method VARCHAR(50) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES purchase_orders(id)
+);
 
 ALTER TABLE
   payments DROP FOREIGN KEY payments_ibfk_1;
