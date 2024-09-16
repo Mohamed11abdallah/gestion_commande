@@ -4,25 +4,25 @@ const {
   getCustomers,
   updateCustomer,
   deleteCustomer,
-} = require("./customers");
+} = require("./customer");
 const {
   addProduct,
   getProducts,
   updateProduct,
   deleteProduct,
-} = require("./products");
+} = require("./product");
 const {
   addPurchaseOrder,
   getPurchaseOrderById,
   updatePurchaseOrder,
   deletePurchaseOrder,
-} = require("./purchaseOrders");
+} = require("./purchaseOrder");
 const {
   addPayment,
   getPayments,
   updatePayment,
   deletePayment,
-} = require("./payments");
+} = require("./payment");
 
 async function mainMenu() {
   let exit = false;

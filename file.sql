@@ -4,6 +4,16 @@ CREATE DATABASE gestion_commande;
 
 use gestion_commande;
 
+DROP TABLE IF EXISTS order_details;
+
+DROP TABLE IF EXISTS payments;
+
+DROP TABLE IF EXISTS purchase_orders;
+
+DROP TABLE IF EXISTS products;
+
+DROP TABLE IF EXISTS customers;
+
 CREATE TABLE customers (
   id INTEGER PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
@@ -38,14 +48,14 @@ CREATE TABLE order_details (
   FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
-ALTER TABLE
-  purchase_orders DROP FOREIGN KEY purchase_orders_ibfk_1;
-
-ALTER TABLE
-  order_details DROP FOREIGN KEY order_details_ibfk_1;
-
-ALTER TABLE
-  order_details DROP FOREIGN KEY order_details_ibfk_2;
+CREATE TABLE payments (
+  id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  order_id INTEGER NOT NULL,
+  date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  amount DECIMAL(10, 2) NOT NULL,
+  payment_method VARCHAR(50) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES purchase_orders(id)
+);
 
 ALTER TABLE
   customers
@@ -69,11 +79,11 @@ MODIFY
 MODIFY
   COLUMN description TEXT NOT NULL,
 ADD
-  COLUMN category VARCHAR(100) NULL,
+  COLUMN category VARCHAR(100),
 ADD
   COLUMN barcode VARCHAR(50) UNIQUE NOT NULL,
 ADD
-  COLUMN status VARCHAR(50) NULL;
+  COLUMN status VARCHAR(50);
 
 ALTER TABLE
   purchase_orders
@@ -82,7 +92,7 @@ MODIFY
 MODIFY
   COLUMN delivery_address TEXT NOT NULL,
 ADD
-  COLUMN track_number VARCHAR(100) NULL,
+  COLUMN track_number VARCHAR(100),
 ADD
   COLUMN status VARCHAR(50) DEFAULT 'pending';
 
@@ -95,18 +105,10 @@ MODIFY
 MODIFY
   COLUMN price DECIMAL(10, 2) NOT NULL;
 
-CREATE TABLE payments (
-  id INTEGER AUTO_INCREMENT PRIMARY KEY,
-  order_id INTEGER NOT NULL,
-  date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  amount DECIMAL(10, 2) NOT NULL,
-  payment_method VARCHAR(50) NOT NULL,
-  FOREIGN KEY (order_id) REFERENCES purchase_orders(id)
-);
+ALTER TABLE
+  payments DROP FOREIGN KEY payments_ibfk_1;
 
 ALTER TABLE
-  order_details
+  payments
 ADD
-  CONSTRAINT order_details_ibfk_1 FOREIGN KEY (order_id) REFERENCES purchase_orders(id),
-ADD
-  CONSTRAINT order_details_ibfk_2 FOREIGN KEY (product_id) REFERENCES products(id);
+  CONSTRAINT payments_ibfk_1 FOREIGN KEY (order_id) REFERENCES purchase_orders(id) ON DELETE CASCADE;
