@@ -61,17 +61,17 @@ async function addPurchaseOrder() {
 
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
-      return;
+      return false;
     }
     if (!validateTrackNumber(trackNumber)) {
       console.error("Numéro de suivi invalide.");
-      return;
+      return false;
     }
     if (!validateStatus(status)) {
       console.error(
         "Statut invalide. Les statuts acceptés sont : En attente, En cours, Livrer, Annuler."
       );
-      return;
+      return false;
     }
 
     const clientExists = await executeQuery(
@@ -80,21 +80,25 @@ async function addPurchaseOrder() {
     );
     if (clientExists[0].count === 0) {
       console.error("Erreur : Le client avec l'ID spécifié n'existe pas.");
-      return;
+      return false;
     }
 
     const orderDetails = getOrderDetailsFromUser();
 
     if (!orderDetails) {
-      return;
+      return false;
     }
 
     const result = await executeQuery(
       "INSERT INTO purchase_orders (date, customer_id, delivery_address, track_number, status) VALUES (?, ?, ?, ?, ?)",
       [date, customerId, deliveryAddress, trackNumber, status]
     );
-    const orderId = result.insertId;
 
+    if (result.affectedRows === 0) {
+      throw new Error("Erreur lors de l'ajout de la commande.");
+    }
+
+    const orderId = result.insertId;
     console.log("Commande ajoutée avec l'ID :", orderId);
 
     let totalAmount = 0;
@@ -106,10 +110,12 @@ async function addPurchaseOrder() {
         [detail.productId]
       );
       if (productExists[0].count === 0) {
-        console.error(
-          `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas.`
+        await executeQuery("DELETE FROM purchase_orders WHERE id = ?", [
+          orderId,
+        ]);
+        throw new Error(
+          `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas. Commande annulée.`
         );
-        return;
       }
 
       await addOrderDetail(
@@ -121,8 +127,10 @@ async function addPurchaseOrder() {
     }
 
     console.log("Tous les détails de commande ont été ajoutés.");
+    return true;
   } catch (error) {
     console.error("Erreur lors de l'ajout de la commande :", error.message);
+    return false;
   }
 }
 
@@ -169,6 +177,7 @@ async function getPurchaseOrderById(orderId) {
       "Erreur lors de la récupération de la commande :",
       error.message
     );
+    return null;
   }
 }
 
@@ -183,17 +192,17 @@ async function updatePurchaseOrder(
   try {
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
-      return;
+      return false;
     }
     if (!validateTrackNumber(trackNumber)) {
       console.error("Numéro de suivi invalide.");
-      return;
+      return false;
     }
     if (!validateStatus(status)) {
       console.error(
         "Statut invalide. Les statuts acceptés sont : En attente, En cours, Livrer, Annuler."
       );
-      return;
+      return false;
     }
 
     const orderExists = await executeQuery(
@@ -202,7 +211,7 @@ async function updatePurchaseOrder(
     );
     if (orderExists[0].count === 0) {
       console.log("Commande introuvable.");
-      return;
+      return false;
     }
 
     const clientExists = await executeQuery(
@@ -211,18 +220,20 @@ async function updatePurchaseOrder(
     );
     if (clientExists[0].count === 0) {
       console.error("Erreur : Le client avec l'ID spécifié n'existe pas.");
-      return;
+      return false;
     }
 
     const updateResult = await executeQuery(
       "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
       [date, customerId, deliveryAddress, trackNumber, status, id]
     );
-    if (updateResult.affectedRows > 0) {
-      console.log("Informations de la commande mises à jour.");
-    } else {
+
+    if (updateResult.affectedRows === 0) {
       console.log("Aucune modification détectée.");
+      return false;
     }
+
+    console.log("Informations de la commande mises à jour.");
 
     const modifyDetails = readline.keyInYNStrict(
       "Voulez-vous modifier les détails de la commande ?"
@@ -248,7 +259,7 @@ async function updatePurchaseOrder(
       const newDetails = getOrderDetailsFromUser();
 
       if (!newDetails) {
-        return;
+        return false;
       }
 
       for (const detail of newDetails) {
@@ -260,7 +271,7 @@ async function updatePurchaseOrder(
           console.error(
             `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas.`
           );
-          return;
+          return false;
         }
       }
 
@@ -271,7 +282,7 @@ async function updatePurchaseOrder(
           console.error(
             "Erreur : La quantité et le prix doivent être positifs."
           );
-          return;
+          return false;
         }
         await addOrderDetail(
           id,
@@ -285,11 +296,13 @@ async function updatePurchaseOrder(
     } else {
       console.log("Aucune modification des détails de la commande.");
     }
+    return true;
   } catch (error) {
     console.error(
       "Erreur lors de la mise à jour de la commande :",
       error.message
     );
+    return false;
   }
 }
 
@@ -299,37 +312,46 @@ async function deletePurchaseOrder(orderId) {
       "SELECT COUNT(*) AS count FROM purchase_orders WHERE id = ?",
       [orderId]
     );
+
     if (orderExists[0].count === 0) {
-      console.log(`Aucune commande trouvée avec l'ID : ${orderId}`);
-      return;
+      console.log("Aucune commande trouvée avec l'ID :", orderId);
+      return false;
     }
 
-    await executeQuery("DELETE FROM payments WHERE order_id = ?", [orderId]);
-
-    const deleteOrderDetails = await executeQuery(
-      "DELETE FROM order_details WHERE order_id = ?",
+    const paymentsExist = await executeQuery(
+      "SELECT COUNT(*) AS count FROM payments WHERE order_id = ?",
       [orderId]
     );
 
-    if (deleteOrderDetails.affectedRows > 0) {
-      console.log("Détails de la commande supprimés avec succès.");
+    if (paymentsExist[0].count > 0) {
+      console.log(
+        "Erreur : La commande ne peut pas être supprimée car elle est liée à un paiement."
+      );
+      return false;
     }
 
-    const deletePurchaseOrder = await executeQuery(
+    await executeQuery("DELETE FROM order_details WHERE order_id = ?", [
+      orderId,
+    ]);
+
+    const deleteResult = await executeQuery(
       "DELETE FROM purchase_orders WHERE id = ?",
       [orderId]
     );
 
-    if (deletePurchaseOrder.affectedRows > 0) {
+    if (deleteResult.affectedRows > 0) {
       console.log("Commande supprimée avec succès.");
+      return true;
     } else {
       console.log("Aucune commande trouvée avec cet ID.");
+      return false;
     }
   } catch (error) {
     console.error(
       "Erreur lors de la suppression de la commande :",
       error.message
     );
+    return false;
   }
 }
 

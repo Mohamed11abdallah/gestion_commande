@@ -1,5 +1,4 @@
-const readline = require("readline-sync");
-const { executeQuery } = require("./db");
+const { pool, executeQuery } = require("./db");
 
 function validateOrderDetails(order_id, product_id, quantity, price) {
   return (
@@ -15,15 +14,29 @@ function validateId(id) {
 }
 
 async function productExists(product_id) {
-  const result = await executeQuery(
-    "SELECT COUNT(*) AS count FROM products WHERE id = ?",
-    [product_id]
-  );
-  return result[0].count > 0;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.execute(
+      "SELECT COUNT(*) AS count FROM products WHERE id = ?",
+      [product_id]
+    );
+    return result[0].count > 0;
+  } catch (error) {
+    console.error("Erreur lors de la vérification du produit :", error.message);
+    return false;
+  } finally {
+    if (connection) connection.release();
+  }
 }
 
 async function addOrderDetail(order_id, product_id, quantity, price) {
+  let connection;
+
   try {
+    connection = await pool.getConnection();
+
     if (!validateOrderDetails(order_id, product_id, quantity, price)) {
       console.log("Erreur : Les données du détail de commande sont invalides.");
       return;
@@ -36,7 +49,7 @@ async function addOrderDetail(order_id, product_id, quantity, price) {
       return;
     }
 
-    const result = await executeQuery(
+    const [result] = await connection.execute(
       "INSERT INTO order_details (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)",
       [order_id, product_id, quantity, price]
     );
@@ -47,23 +60,34 @@ async function addOrderDetail(order_id, product_id, quantity, price) {
       "Erreur lors de l'ajout du détail de commande :",
       error.message
     );
+  } finally {
+    if (connection) connection.release(); // Libérer la connexion
   }
 }
 
 async function getOrderDetail() {
+  let connection;
+
   try {
-    const rows = await executeQuery("SELECT * FROM order_details");
+    connection = await pool.getConnection();
+    const [rows] = await connection.execute("SELECT * FROM order_details");
     return rows;
   } catch (error) {
     console.error(
       "Erreur lors de la récupération des détails de commandes :",
       error.message
     );
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 async function updateOrderDetail(id, order_id, product_id, quantity, price) {
+  let connection;
+
   try {
+    connection = await pool.getConnection();
+
     if (!validateOrderDetails(order_id, product_id, quantity, price)) {
       console.log("Erreur : Les données du détail de commande sont invalides.");
       return;
@@ -76,7 +100,7 @@ async function updateOrderDetail(id, order_id, product_id, quantity, price) {
       return;
     }
 
-    const result = await executeQuery(
+    const [result] = await connection.execute(
       "UPDATE order_details SET order_id = ?, product_id = ?, quantity = ?, price = ? WHERE id = ?",
       [order_id, product_id, quantity, price, id]
     );
@@ -91,26 +115,39 @@ async function updateOrderDetail(id, order_id, product_id, quantity, price) {
       "Erreur lors de la mise à jour du détail de commande :",
       error.message
     );
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 async function deleteOrderDetail(id) {
+  let connection;
+
   try {
+    connection = await pool.getConnection();
+
     if (!validateId(id)) {
       console.log("Erreur : ID de détail de commande invalide.");
       return;
     }
 
-    const result = await executeQuery(
+    const [result] = await connection.execute(
       "DELETE FROM order_details WHERE id = ?",
       [id]
     );
-    console.log("Détail de commande supprimé :", result.affectedRows > 0);
+
+    if (result.affectedRows > 0) {
+      console.log("Détail de commande supprimé avec succès.");
+    } else {
+      console.log("Aucun détail de commande trouvé avec cet ID.");
+    }
   } catch (error) {
     console.error(
       "Erreur lors de la suppression du détail de commande :",
       error.message
     );
+  } finally {
+    if (connection) connection.release();
   }
 }
 

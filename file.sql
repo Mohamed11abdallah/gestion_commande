@@ -4,16 +4,6 @@ CREATE DATABASE gestion_commande;
 
 use gestion_commande;
 
-DROP TABLE IF EXISTS order_details;
-
-DROP TABLE IF EXISTS payments;
-
-DROP TABLE IF EXISTS purchase_orders;
-
-DROP TABLE IF EXISTS products;
-
-DROP TABLE IF EXISTS customers;
-
 CREATE TABLE customers (
   id INTEGER PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
@@ -111,4 +101,4 @@ ALTER TABLE
 ALTER TABLE
   payments
 ADD
-  CONSTRAINT payments_ibfk_1 FOREIGN KEY (order_id) REFERENCES purchase_orders(id) ON DELETE CASCADE;
+  CONSTRAINT payments_ibfk_1 FOREIGN KEY (order_id) REFERENCES purchase_orders(id) ON DELETE RESTRICT;

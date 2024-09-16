@@ -1,4 +1,3 @@
-// const { executeQuery } = require("./db");
 const { pool, executeQuery } = require("./db");
 
 function validateProduct(
@@ -16,31 +15,37 @@ function validateProduct(
   if (typeof name !== "string" || name.trim().length === 0) {
     errors.push("Nom du produit invalide. Il doit être une chaîne non vide.");
   }
+
   if (typeof description !== "string" || description.trim().length === 0) {
     errors.push(
       "Description du produit invalide. Elle doit être une chaîne non vide."
     );
   }
+
   if (typeof price !== "number" || price <= 0) {
     errors.push(
       "Prix du produit invalide. Il doit être un nombre supérieur à 0."
     );
   }
+
   if (!Number.isInteger(stock) || stock < 0) {
     errors.push(
       "Stock du produit invalide. Il doit être un nombre entier supérieur ou égal à 0."
     );
   }
+
   if (typeof category !== "string" || category.trim().length === 0) {
     errors.push(
       "Catégorie du produit invalide. Elle doit être une chaîne non vide."
     );
   }
+
   if (typeof barcode !== "string" || barcode.trim().length === 0) {
     errors.push(
       "Code-barres du produit invalide. Il doit être une chaîne non vide."
     );
   }
+
   if (!validStatuses.includes(status)) {
     errors.push(
       "Statut du produit invalide. Les statuts acceptés sont : available, unavailable, discontinued."
