@@ -84,9 +84,21 @@ async function addPurchaseOrder() {
     }
 
     const orderDetails = getOrderDetailsFromUser();
-
     if (!orderDetails) {
       return false;
+    }
+
+    for (const detail of orderDetails) {
+      const productExists = await executeQuery(
+        "SELECT COUNT(*) AS count FROM products WHERE id = ?",
+        [detail.productId]
+      );
+      if (productExists[0].count === 0) {
+        console.error(
+          `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas. Annulation de la commande.`
+        );
+        return false;
+      }
     }
 
     const result = await executeQuery(
@@ -104,19 +116,6 @@ async function addPurchaseOrder() {
     let totalAmount = 0;
     for (const detail of orderDetails) {
       totalAmount += detail.quantity * detail.price;
-
-      const productExists = await executeQuery(
-        "SELECT COUNT(*) AS count FROM products WHERE id = ?",
-        [detail.productId]
-      );
-      if (productExists[0].count === 0) {
-        await executeQuery("DELETE FROM purchase_orders WHERE id = ?", [
-          orderId,
-        ]);
-        throw new Error(
-          `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas. Commande annulée.`
-        );
-      }
 
       await addOrderDetail(
         orderId,
@@ -189,6 +188,9 @@ async function updatePurchaseOrder(
   trackNumber,
   status
 ) {
+  let transactionSuccessful = true;
+  let newDetails = [];
+
   try {
     if (!validateDate(date)) {
       console.error("Date invalide. Format attendu : YYYY-MM-DD.");
@@ -223,18 +225,6 @@ async function updatePurchaseOrder(
       return false;
     }
 
-    const updateResult = await executeQuery(
-      "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
-      [date, customerId, deliveryAddress, trackNumber, status, id]
-    );
-
-    if (updateResult.affectedRows === 0) {
-      console.log("Aucune modification détectée.");
-      return false;
-    }
-
-    console.log("Informations de la commande mises à jour.");
-
     const modifyDetails = readline.keyInYNStrict(
       "Voulez-vous modifier les détails de la commande ?"
     );
@@ -256,7 +246,7 @@ async function updatePurchaseOrder(
         });
       }
 
-      const newDetails = getOrderDetailsFromUser();
+      newDetails = getOrderDetailsFromUser();
 
       if (!newDetails) {
         return false;
@@ -269,34 +259,65 @@ async function updatePurchaseOrder(
         );
         if (productExists[0].count === 0) {
           console.error(
-            `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas.`
+            `Erreur : Le produit avec l'ID ${detail.productId} n'existe pas. Annulation de la commande..`
           );
-          return false;
+          transactionSuccessful = false;
+          break;
         }
       }
 
-      await executeQuery("DELETE FROM order_details WHERE order_id = ?", [id]);
-
-      for (const detail of newDetails) {
-        if (detail.quantity <= 0 || detail.price <= 0) {
-          console.error(
-            "Erreur : La quantité et le prix doivent être positifs."
-          );
-          return false;
-        }
-        await addOrderDetail(
+      if (transactionSuccessful) {
+        await executeQuery("DELETE FROM order_details WHERE order_id = ?", [
           id,
-          detail.productId,
-          detail.quantity,
-          detail.price
-        );
-      }
+        ]);
 
-      console.log("Détails de commande mis à jour.");
+        for (const detail of newDetails) {
+          if (detail.quantity <= 0 || detail.price <= 0) {
+            console.error(
+              "Erreur : La quantité et le prix doivent être positifs."
+            );
+            transactionSuccessful = false;
+            break;
+          }
+          await addOrderDetail(
+            id,
+            detail.productId,
+            detail.quantity,
+            detail.price
+          );
+        }
+
+        if (transactionSuccessful) {
+          const updateResult = await executeQuery(
+            "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
+            [date, customerId, deliveryAddress, trackNumber, status, id]
+          );
+
+          if (updateResult.affectedRows === 0) {
+            console.log("Aucune modification détectée.");
+            transactionSuccessful = false;
+          } else {
+            console.log("Informations de la commande mises à jour.");
+          }
+        }
+      }
     } else {
       console.log("Aucune modification des détails de la commande.");
+
+      const updateResult = await executeQuery(
+        "UPDATE purchase_orders SET date = ?, customer_id = ?, delivery_address = ?, track_number = ?, status = ? WHERE id = ?",
+        [date, customerId, deliveryAddress, trackNumber, status, id]
+      );
+
+      if (updateResult.affectedRows === 0) {
+        console.log("Aucune modification détectée.");
+        transactionSuccessful = false;
+      } else {
+        console.log("Informations de la commande mises à jour.");
+      }
     }
-    return true;
+
+    return transactionSuccessful;
   } catch (error) {
     console.error(
       "Erreur lors de la mise à jour de la commande :",
