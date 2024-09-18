@@ -133,6 +133,19 @@ async function addPurchaseOrder() {
   }
 }
 
+async function getAllPurchaseOrders() {
+  const query = `
+    SELECT po.id AS order_id, po.date, po.customer_id, po.delivery_address, po.track_number, po.status,
+           c.name AS customer_name
+    FROM purchase_orders po
+    JOIN customers c ON po.customer_id = c.id
+    ORDER BY po.date DESC
+  `;
+
+  const rows = await executeQuery(query);
+  return rows;
+}
+
 async function getPurchaseOrderById(orderId) {
   try {
     const query = `
@@ -378,6 +391,7 @@ async function deletePurchaseOrder(orderId) {
 
 module.exports = {
   addPurchaseOrder,
+  getAllPurchaseOrders,
   getPurchaseOrderById,
   updatePurchaseOrder,
   deletePurchaseOrder,
